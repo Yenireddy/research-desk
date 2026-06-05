@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Equity Research Desk</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.hdr{background:linear-gradient(135deg,#1e3a5f,#1a1a2e);padding:14px 20px;border-bottom:1px solid #1e3a5f;display:flex;justify-content:space-between;align-items:center}
+.hdr h1{margin:0;font-size:17px;color:#38bdf8}.hdr .sub{font-size:11px;color:#64748b;margin-top:2px}
+.saved{font-size:10px;color:#10b981;opacity:0;transition:.4s}.saved.on{opacity:1}
+.tabs{display:flex;background:#1e293b;border-bottom:1px solid #334155}
+.tab{flex:1;padding:11px 4px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#94a3b8;border-bottom:2px solid transparent}
+.tab.on{background:#0f172a;color:#38bdf8;border-bottom-color:#38bdf8}
+.wrap{padding:16px;max-width:700px;margin:0 auto}
+input,textarea,select{font-family:inherit;font-size:13px;outline:none}
+.fi{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0}
+.row{display:flex;gap:8px;margin-bottom:12px}
+.btn{border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px}
+.btn.pri{background:#38bdf8;color:#0f172a;padding:10px 16px}
+.btn.cyan{background:#0ea5e9;color:#fff;padding:5px 12px;font-size:11px}
+.btn.blue{background:#1e40af;color:#bfdbfe;padding:5px 12px;font-size:11px}
+.btn.amber{background:#f59e0b;color:#0f172a;padding:7px 14px;font-size:12px}
+.btn.ghost{background:transparent;color:#94a3b8;border:1px solid #334155;padding:5px 12px;font-size:12px}
+.btn.danger{background:#ef4444;color:#fff;padding:5px 12px;font-size:11px}
+.btn.full{width:100%;padding:11px}
+.card{background:#1e293b;border-radius:12px;padding:14px;border:1px solid #334155;margin-bottom:12px}
+.crow{background:#1e293b;border-radius:10px;padding:12px 14px;border:1px solid #334155;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.crnm{font-weight:600;font-size:13px;color:#f1f5f9}.crmeta{font-size:10px;color:#64748b;margin-top:2px}
+.between{display:flex;justify-content:space-between;align-items:center}
+.sec{font-weight:600;font-size:13px}
+.out{margin-top:10px;font-size:12px;color:#cbd5e1;white-space:pre-wrap;line-height:1.7;background:#0f172a;padding:12px;border-radius:8px;max-height:350px;overflow-y:auto}
+textarea.notes{width:100%;min-height:130px;padding:10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;line-height:1.6;resize:vertical}
+.chip{padding:3px 8px;border-radius:14px;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer;display:inline-block;margin:2px}
+.empty{text-align:center;padding:40px;color:#475569}
+.muted{font-size:11px;color:#475569;margin-top:10px}
+.spin{display:inline-block;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal{background:#1e293b;border-radius:16px;padding:24px;width:100%;max-width:420px;border:1px solid #334155}
+.modal h2{margin:0 0 8px;color:#38bdf8;font-size:16px}
+.modal p{font-size:12px;color:#94a3b8;margin:0 0 16px;line-height:1.6}
+.modal input{width:100%;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<!-- API KEY MODAL -->
+<div class="overlay" id="apimodal">
+  <div class="modal">
+    <h2>🔑 Anthropic API Key</h2>
+    <p>This app uses Claude AI for research briefs and news. Enter your key once — it's stored only in your browser. Get a free key at <strong>console.anthropic.com</strong></p>
+    <input class="fi" id="keyinput" type="password" placeholder="sk-ant-…">
+    <button class="btn pri full" id="keysave">Save Key & Open Desk</button>
+    <div style="margin-top:10px;font-size:10px;color:#475569">Your key never leaves your device. Notes work offline without it.</div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+<div class="hdr">
+  <div><h1>🔬 Equity Research Desk</h1><div class="sub" id="subcount">0 companies tracked</div></div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <span class="saved" id="saveind">💾</span>
+    <button class="btn ghost" id="clrkey" style="font-size:10px;padding:4px 8px">⚙️ Key</button>
+  </div>
+</div>
+<div class="tabs">
+  <button class="tab on" data-t="0">🔍 Research</button>
+  <button class="tab" data-t="1">📰 Live News</button>
+  <button class="tab" data-t="2">📚 Library</button>
+</div>
+<div class="wrap" id="view"></div>
+</div>
+
+<script>
+const PORTFOLIO=["Angel One","Adani Wilmar","Anant Raj","Apollo Hospitals","Bajaj Finance","Belrise Industries","Brigade Hotel Ventures","Bharat Electronics","Bharti Airtel","CDSL","Data Patterns","Electronics Mart","Fractal Analytics","GAIL India","Groww","Godrej Consumer","HPCL","HDFC Bank","ITC","ITC Hotels","Indian Energy Exchange","IndiGo","KPI Green Energy","Kalyan Jewellers","Laurus Labs","Mahindra & Mahindra","NSDL","NTPC","ONGC","Ola Electric","Premier Energies","Redington","Sagility India","Sapphire Foods","Samvardhana Motherson","Shree Renuka Sugars","State Bank of India","Suven Pharma","Tata Capital","Tata Power","Trent","Urban Company","V-Mart Retail","Vedanta","Zomato"];
+
+const LS="research_desk_v2";
+const esc=s=>(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const idOf=n=>n.toLowerCase().replace(/[^a-z0-9]/g,"");
+const ago=t=>{if(!t)return"";const m=Math.floor((Date.now()-t)/60000);if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.floor(m/60);if(h<24)return h+"h ago";return Math.floor(h/24)+"d ago";};
+const $=id=>document.getElementById(id);
+
+let apiKey="", ws={items:{},order:[]}, curTab=0, active=null, showPort=false;
+const busy={};
+
+// --- Key management ---
+function loadKey(){
+  apiKey=localStorage.getItem("erd_key")||"";
+  if(apiKey){ showApp(); }
+}
+function showApp(){ $("apimodal").style.display="none"; $("app").style.display="block"; loadWs(); render(); }
+$("keysave").onclick=()=>{
+  const k=$("keyinput").value.trim();
+  if(!k){ alert("Please enter your API key."); return; }
+  apiKey=k; localStorage.setItem("erd_key",k); showApp();
+};
+$("clrkey").onclick=()=>{ if(confirm("Change API key?")){ localStorage.removeItem("erd_key"); location.reload(); } };
+
+// --- Persistence ---
+function loadWs(){ try{ const d=localStorage.getItem(LS); if(d) ws=JSON.parse(d); }catch(e){} }
+let st;
+function save(){ 
+  render();
+  try{ localStorage.setItem(LS,JSON.stringify(ws)); }catch(e){}
+  $("saveind").classList.add("on"); clearTimeout(st); st=setTimeout(()=>$("saveind").classList.remove("on"),800);
+}
+
+// --- AI ---
+async function ai(prompt,sys){
+  const r=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1200,
+      system:sys||"Concise equity analyst. No markdown ** or ##. Use CAPS headers.",
+      messages:[{role:"user",content:prompt}]})});
+  const d=await r.json();
+  if(d.error) throw new Error(d.error.message);
+  return (d.content||[]).map(b=>b.text||"").join("\n")||"No response.";
+}
+
+// --- Actions ---
+function addCo(n){
+  const nm=(n||"").trim(); if(!nm) return;
+  const id=idOf(nm);
+  if(ws.items[id]){ active=id; curTab=0; render(); return; }
+  ws.items[id]={name:nm,brief:"",notes:"",news:"",newsAt:0};
+  ws.order.unshift(id); active=id; curTab=0; save();
+}
+function delCo(id){ delete ws.items[id]; ws.order=ws.order.filter(x=>x!==id); if(active===id)active=null; save(); }
+async function doBrief(id){
+  const c=ws.items[id]; busy[id+"b"]=true; render();
+  try{c.brief=await ai(`Research brief for ${c.name}. Cover: 1) BUSINESS OVERVIEW, 2) FINANCIALS & VALUATION, 3) MOAT, 4) RECENT DEVELOPMENTS, 5) BULL CASE (3 pts), 6) BEAR CASE (3 pts), 7) OUTLOOK. Concise, investment-grade.`,"Senior equity analyst. Indian & global markets. Structured briefs.");}
+  catch(e){c.brief="Error: "+e.message;}
+  busy[id+"b"]=false; save();
+}
+async function doNews(id){
+  const c=ws.items[id]; busy[id+"n"]=true; render();
+  try{c.news=await ai(`4 most important recent news for ${c.name}. Each: date, headline, 2-line stock impact.`,"Concise equity news analyst. Brief and actionable."); c.newsAt=Date.now();}
+  catch(e){c.news="Error: "+e.message;}
+  busy[id+"n"]=false; save();
+}
+function saveNote(id){ ws.items[id].notes=($("notearea")||{}).value||""; save(); }
+
+// --- Render ---
+function render(){
+  const sub=$("subcount"); if(sub) sub.textContent=ws.order.length+" companies tracked";
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",+t.dataset.t===curTab));
+  const v=$("view"); if(!v) return;
+  if(curTab===0) v.innerHTML=renderResearch();
+  else if(curTab===1) v.innerHTML=renderNews();
+  else v.innerHTML=renderLib();
+  bind();
+}
+
+function renderResearch(){
+  let h=`<div class="row"><input class="fi" id="addinp" placeholder="Type any company to research…"><button class="btn pri" id="addbtn">+ Add</button></div>
+  <button style="background:none;border:none;color:#64748b;font-size:11px;cursor:pointer" id="togp">${showPort?"▾":"▸"} Quick-add from my portfolio</button>`;
+  if(showPort) h+=`<div style="margin:8px 0 14px;max-height:120px;overflow:auto">`+PORTFOLIO.map(n=>`<span class="chip" data-add="${esc(n)}">${esc(n)}</span>`).join("")+`</div>`;
+  else h+=`<div style="height:10px"></div>`;
+  if(!active){
+    if(!ws.order.length) return h+`<div class="empty"><div style="font-size:36px;margin-bottom:10px">🔭</div><div>Add any company above to start.</div></div>`;
+    h+=`<div style="font-size:12px;color:#64748b;margin-bottom:6px">Your watchlist — tap to open</div>`;
+    h+=ws.order.map(id=>{const c=ws.items[id],tags=[c.brief?"📄":"",c.notes?"📝":"",c.news?"📰 "+ago(c.newsAt):""].filter(Boolean).join(" ");
+      return `<div class="crow" data-open="${id}"><div><div class="crnm">${esc(c.name)}</div><div class="crmeta">${tags}</div></div><span data-del="${id}" style="color:#475569;font-size:16px;padding:4px">✕</span></div>`;}).join("");
+  } else {
+    const c=ws.items[active];
+    h+=`<button class="btn ghost" id="back">← Back</button>
+    <div style="font-weight:700;font-size:18px;color:#f1f5f9;margin:12px 0">${esc(c.name)}</div>
+    <div class="card"><div class="between"><span class="sec" style="color:#0ea5e9">📄 AI Research Brief</span>
+      <button class="btn cyan" data-brief="${active}">${busy[active+"b"]?'<span class="spin">↻</span>':(c.brief?"Regenerate":"Generate")}</button></div>
+      ${c.brief?`<div class="out">${esc(c.brief)}</div>`:""}</div>
+    <div class="card"><div class="sec" style="color:#f59e0b;margin-bottom:8px">📝 My Private Notes</div>
+      <textarea class="notes" id="notearea" placeholder="Thesis, price targets, catalysts, risks…">${esc(c.notes)}</textarea>
+      <button class="btn amber" id="savenote" style="margin-top:8px">💾 Save Note</button></div>
+    <div class="card"><div class="between"><span class="sec" style="color:#38bdf8">📰 News ${c.newsAt?"· "+ago(c.newsAt):""}</span>
+      <button class="btn blue" data-news="${active}">${busy[active+"n"]?'<span class="spin">↻</span>':"Refresh"}</button></div>
+      ${c.news?`<div class="out">${esc(c.news)}</div>`:""}</div>`;
+  }
+  return h;
+}
+
+function renderNews(){
+  if(!ws.order.length) return `<div class="empty">Add companies in Research first.</div>`;
+  let h=`<button class="btn pri full" id="rfall">🔄 Refresh All News</button><div style="height:12px"></div>`;
+  h+=ws.order.map(id=>{const c=ws.items[id];
+    return `<div class="card"><div class="between"><span class="sec">${esc(c.name)}</span>
+    <button class="btn blue" data-news="${id}">${busy[id+"n"]?'<span class="spin">↻</span>':(c.news?"↻":"Get")}</button></div>
+    ${c.news?`<div class="out" style="background:none;padding:8px 0 0">${esc(c.news)}</div>`:""}</div>`;}).join("");
+  return h;
+}
+
+function renderLib(){
+  const ids=ws.order.filter(id=>ws.items[id].notes||ws.items[id].brief);
+  if(!ids.length) return `<div class="empty"><div style="font-size:32px;margin-bottom:8px">📭</div>No saved notes or briefs yet.</div>`;
+  let h=`<div style="font-size:13px;color:#94a3b8;margin-bottom:14px">All your saved research — stored in this browser.</div>`;
+  h+=ids.map(id=>{const c=ws.items[id];
+    return `<div class="card"><div class="between" style="margin-bottom:8px"><span style="font-weight:700;font-size:14px">${esc(c.name)}</span>
+    <button class="btn ghost" data-open="${id}">Open</button></div>
+    ${c.notes?`<div style="font-size:12px;color:#f59e0b;margin-bottom:4px">📝 Notes</div><div class="out" style="margin-top:0">${esc(c.notes)}</div>`:""}
+    ${c.brief?`<div style="font-size:12px;color:#0ea5e9;margin:10px 0 4px">📄 Brief (tap Open to see full)</div>
+    <div class="out" style="margin-top:0;max-height:100px;font-size:11px;color:#94a3b8">${esc(c.brief.slice(0,300))}…</div>`:""}</div>`;}).join("");
+  return h;
+}
+
+function bind(){
+  const ai=$("addinp"); if(ai){$("addbtn").onclick=()=>addCo(ai.value);ai.onkeydown=e=>{if(e.key==="Enter")addCo(ai.value);};}
+  const tp=$("togp"); if(tp) tp.onclick=()=>{showPort=!showPort;render();};
+  document.querySelectorAll("[data-add]").forEach(el=>el.onclick=()=>addCo(el.dataset.add));
+  document.querySelectorAll("[data-open]").forEach(el=>el.onclick=()=>{active=el.dataset.open;curTab=0;render();});
+  document.querySelectorAll("[data-del]").forEach(el=>el.onclick=e=>{e.stopPropagation();delCo(el.dataset.del);});
+  const bk=$("back"); if(bk) bk.onclick=()=>{active=null;render();};
+  document.querySelectorAll("[data-brief]").forEach(el=>el.onclick=()=>doBrief(el.dataset.brief));
+  document.querySelectorAll("[data-news]").forEach(el=>el.onclick=()=>doNews(el.dataset.news));
+  const sn=$("savenote"); if(sn) sn.onclick=()=>saveNote(active);
+  const rfall=$("rfall"); if(rfall) rfall.onclick=async()=>{for(const id of ws.order)await doNews(id);};
+  document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{curTab=+t.dataset.t;render();});
+}
+
+loadKey();
+</script>
+</body>
+</html>
