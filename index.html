@@ -77,6 +77,16 @@ const PORTFOLIO=["Angel One","Adani Wilmar","Anant Raj","Apollo Hospitals","Baja
 
 const LS="research_desk_v2";
 const esc=s=>(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+// Render light markdown (**, ##, ---, bullets) as clean HTML
+function md(s){
+  let t=esc(s||"");
+  t=t.replace(/^######\s?(.*)$/gm,'<div style="font-weight:700;color:#cbd5e1;font-size:12px;margin:8px 0 2px">$1</div>');
+  t=t.replace(/^#{1,5}\s?(.*)$/gm,'<div style="font-weight:700;color:#38bdf8;font-size:13px;margin:12px 0 4px">$1</div>');
+  t=t.replace(/\*\*(.+?)\*\*/g,'<strong style="color:#f1f5f9">$1</strong>');
+  t=t.replace(/^\s*[-*]\s+(.*)$/gm,'<div style="padding-left:14px;position:relative;margin:2px 0"><span style="position:absolute;left:0;color:#64748b">•</span>$1</div>');
+  t=t.replace(/^\s*---+\s*$/gm,'<hr style="border:none;border-top:1px solid #334155;margin:10px 0">');
+  return t;
+}
 const idOf=n=>n.toLowerCase().replace(/[^a-z0-9]/g,"");
 const ago=t=>{if(!t)return"";const m=Math.floor((Date.now()-t)/60000);if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.floor(m/60);if(h<24)return h+"h ago";return Math.floor(h/24)+"d ago";};
 const $=id=>document.getElementById(id);
@@ -168,13 +178,13 @@ function renderResearch(){
     <div style="font-weight:700;font-size:18px;color:#f1f5f9;margin:12px 0">${esc(c.name)}</div>
     <div class="card"><div class="between"><span class="sec" style="color:#0ea5e9">📄 AI Research Brief</span>
       <button class="btn cyan" data-brief="${active}">${busy[active+"b"]?'<span class="spin">↻</span>':(c.brief?"Regenerate":"Generate")}</button></div>
-      ${c.brief?`<div class="out">${esc(c.brief)}</div>`:""}</div>
+      ${c.brief?`<div class="out">${md(c.brief)}</div>`:""}</div>
     <div class="card"><div class="sec" style="color:#f59e0b;margin-bottom:8px">📝 My Private Notes</div>
       <textarea class="notes" id="notearea" placeholder="Thesis, price targets, catalysts, risks…">${esc(c.notes)}</textarea>
       <button class="btn amber" id="savenote" style="margin-top:8px">💾 Save Note</button></div>
     <div class="card"><div class="between"><span class="sec" style="color:#38bdf8">📰 News ${c.newsAt?"· "+ago(c.newsAt):""}</span>
       <button class="btn blue" data-news="${active}">${busy[active+"n"]?'<span class="spin">↻</span>':"Refresh"}</button></div>
-      ${c.news?`<div class="out">${esc(c.news)}</div>`:""}</div>`;
+      ${c.news?`<div class="out">${md(c.news)}</div>`:""}</div>`;
   }
   return h;
 }
@@ -185,7 +195,7 @@ function renderNews(){
   h+=ws.order.map(id=>{const c=ws.items[id];
     return `<div class="card"><div class="between"><span class="sec">${esc(c.name)}</span>
     <button class="btn blue" data-news="${id}">${busy[id+"n"]?'<span class="spin">↻</span>':(c.news?"↻":"Get")}</button></div>
-    ${c.news?`<div class="out" style="background:none;padding:8px 0 0">${esc(c.news)}</div>`:""}</div>`;}).join("");
+    ${c.news?`<div class="out" style="background:none;padding:8px 0 0">${md(c.news)}</div>`:""}</div>`;}).join("");
   return h;
 }
 
@@ -196,9 +206,9 @@ function renderLib(){
   h+=ids.map(id=>{const c=ws.items[id];
     return `<div class="card"><div class="between" style="margin-bottom:8px"><span style="font-weight:700;font-size:14px">${esc(c.name)}</span>
     <button class="btn ghost" data-open="${id}">Open</button></div>
-    ${c.notes?`<div style="font-size:12px;color:#f59e0b;margin-bottom:4px">📝 Notes</div><div class="out" style="margin-top:0">${esc(c.notes)}</div>`:""}
+    ${c.notes?`<div style="font-size:12px;color:#f59e0b;margin-bottom:4px">📝 Notes</div><div class="out" style="margin-top:0">${md(c.notes)}</div>`:""}
     ${c.brief?`<div style="font-size:12px;color:#0ea5e9;margin:10px 0 4px">📄 Brief (tap Open to see full)</div>
-    <div class="out" style="margin-top:0;max-height:100px;font-size:11px;color:#94a3b8">${esc(c.brief.slice(0,300))}…</div>`:""}</div>`;}).join("");
+    <div class="out" style="margin-top:0;max-height:100px;font-size:11px;color:#94a3b8">${md(c.brief.slice(0,300))}…</div>`:""}</div>`;}).join("");
   return h;
 }
 
