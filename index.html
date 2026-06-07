@@ -109,8 +109,8 @@ function save(){
 // --- AI ---
 async function ai(prompt,sys){
   const r=await fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01"},
-    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1200,
+    method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1200,
       system:sys||"Concise equity analyst. No markdown ** or ##. Use CAPS headers.",
       messages:[{role:"user",content:prompt}]})});
   const d=await r.json();
